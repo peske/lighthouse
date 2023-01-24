@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: beacon
+  namespace: lighthouse
+spec:
+  selector:
+    matchLabels:
+      app: beacon
+  serviceName: beacon
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: beacon
+    spec:
+      containers:
+      - name: lighthouse
+        image: sigp/lighthouse:latest
+        envFrom:
+        - configMapRef:
+            name: env-vars
+        ports:
+        - containerPort: 5052
+          name: tcp-5052
+          protocol: TCP
+        - containerPort: 5053
+          name: tcp-5053
+          protocol: TCP
+        - containerPort: 9000
+          name: tcp-9000
+          protocol: TCP
+        - containerPort: 9000
+          name: udp-9000
+          protocol: UDP
+        volumeMounts:
+        - name: lighthouse-data
+          mountPath: /root/.lighthouse
+        - name: jwt-token
+          mountPath: /root/jwttoken/jwtsecret.hex
+          subPath: jwtsecret.hex
+        - name: start-beacon-node-sh
+          mountPath: /root/start-beacon-node.sh
+          subPath: start-beacon-node.sh
+        command:
+          - "/bin/sh"
+          - "/root/start-beacon-node.sh"
+      volumes:
+      - name: jwt-token
+        secret:
+          secretName: jwt-token
+      - name: start-beacon-node-sh
+        configMap:
+          name: start-beacon-node-sh
+          defaultMode: 0755
+  volumeClaimTemplates:
+  - metadata:
+      name: lighthouse-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "local-storage"
+      resources:
+        requests:
+          storage: 248Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: beacon-p2p
+  namespace: lighthouse
+spec:
+  selector:
+    app: beacon
+  type: NodePort
+  ports:
+  - name: tcp-9000
+    port: 9000
+    nodePort: 30900
+    targetPort: 9000
+    protocol: TCP
+  - name: udp-9000
+    port: 9000
+    nodePort: 30900
+    targetPort: 9000
+    protocol: UDP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: beacon-api
+  namespace: lighthouse
+spec:
+  selector:
+    app: beacon
+  type: ClusterIP
+  ports:
+  - name: tcp-5052
+    port: 5052
+    targetPort: 5052
+    protocol: TCP
+  - name: tcp-5053
+    port: 5053
+    targetPort: 5053
+    protocol: TCP

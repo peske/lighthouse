@@ -59,3 +59,17 @@ Create a `StatefulSet` by executing:
 ```bash
 kubectl apply -f ./geth.yaml
 ```
+
+# Install Lighthouse beacon
+
+Create a `ConfigMap` with the entry point script by executing:
+
+```bash
+kubectl --namespace lighthouse create configmap start-beacon-node-sh --from-file=./scripts/start-beacon-node.sh
+```
+
+Create a `StatefulSet` by executing:
+
+```bash
+kubectl apply -f ./beacon.yaml
+```
