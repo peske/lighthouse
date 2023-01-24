@@ -58,3 +58,29 @@ spec:
       resources:
         requests:
           storage: 1510Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: geth
+  namespace: lighthouse
+spec:
+  selector:
+    app: geth
+  type: NodePort
+  ports:
+  - name: authrpc
+    port: 8551
+    targetPort: 8551
+    protocol: TCP
+  - name: listener
+    port: 30303
+    nodePort: 30303
+    targetPort: 30303
+    protocol: TCP
+  - name: discovery
+    port: 30303
+    nodePort: 30303
+    targetPort: 30303
+    protocol: UDP
