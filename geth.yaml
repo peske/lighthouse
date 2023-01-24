@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: geth
+  namespace: lighthouse
+spec:
+  selector:
+    matchLabels:
+      app: geth
+  serviceName: geth
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: geth
+    spec:
+      containers:
+      - name: client-go
+        image: ethereum/client-go:stable
+        envFrom:
+        - configMapRef:
+            name: env-vars
+        ports:
+        - containerPort: 8551
+          name: authrpc
+          protocol: TCP
+        - containerPort: 30303
+          name: listener
+          protocol: TCP
+        - containerPort: 30303
+          name: discovery
+          protocol: UDP
+        volumeMounts:
+        - name: geth-data
+          mountPath: /root/data
+        - name: jwt-token
+          mountPath: /root/jwttoken/jwtsecret.hex
+          subPath: jwtsecret.hex
+        - name: start-geth-sh
+          mountPath: /root/start-geth.sh
+          subPath: start-geth.sh
+        command:
+          - "/bin/sh"
+          - "/root/start-geth.sh"
+      volumes:
+      - name: jwt-token
+        secret:
+          secretName: jwt-token
+      - name: start-geth-sh
+        configMap:
+          name: start-geth-sh
+  volumeClaimTemplates:
+  - metadata:
+      name: geth-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "local-storage"
+      resources:
+        requests:
+          storage: 1510Gi
