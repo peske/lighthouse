@@ -49,6 +49,7 @@ spec:
       - name: start-geth-sh
         configMap:
           name: start-geth-sh
+          defaultMode: 0755
   volumeClaimTemplates:
   - metadata:
       name: geth-data
