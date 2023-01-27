@@ -17,9 +17,6 @@ spec:
       containers:
       - name: client-go
         image: ethereum/client-go:stable
-        envFrom:
-        - configMapRef:
-            name: env-vars
         ports:
         - containerPort: 8551
           name: authrpc
@@ -36,26 +33,30 @@ spec:
         - name: jwt-token
           mountPath: /root/jwttoken/jwtsecret.hex
           subPath: jwtsecret.hex
-        - name: start-geth-sh
-          mountPath: /root/start-geth.sh
-          subPath: start-geth.sh
         command:
-          - "/bin/sh"
-          - "/root/start-geth.sh"
+        - geth
+        - --sepolia
+        - --datadir=/root/data/.ethereum
+        - --datadir.ancient=/root/data/ancient-data
+        - --http
+        - --http.addr=0.0.0.0
+        - --http.vhosts=*
+        - --http.api=eth,net
+        - --ipcdisable
+        - --authrpc.addr=0.0.0.0
+        - --authrpc.port=8551
+        - --authrpc.vhosts=*
+        - --authrpc.jwtsecret=/root/jwttoken/jwtsecret.hex
       volumes:
       - name: jwt-token
         secret:
           secretName: jwt-token
-      - name: start-geth-sh
-        configMap:
-          name: start-geth-sh
-          defaultMode: 0755
   volumeClaimTemplates:
   - metadata:
       name: geth-data
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "local-storage"
+      storageClassName: "local-ssd-storage"
       resources:
         requests:
           storage: 1510Gi
@@ -64,17 +65,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: geth
+  name: geth-exposed
   namespace: lighthouse
 spec:
   selector:
     app: geth
   type: NodePort
   ports:
-  - name: authrpc
-    port: 8551
-    targetPort: 8551
-    protocol: TCP
   - name: listener
     port: 30303
     nodePort: 30303
@@ -85,3 +82,19 @@ spec:
     nodePort: 30303
     targetPort: 30303
     protocol: UDP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: geth-authrpc
+  namespace: lighthouse
+spec:
+  selector:
+    app: geth
+  type: ClusterIP
+  ports:
+  - name: authrpc
+    port: 8551
+    targetPort: 8551
+    protocol: TCP
