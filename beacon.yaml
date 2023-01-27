@@ -17,9 +17,6 @@ spec:
       containers:
       - name: lighthouse
         image: sigp/lighthouse:latest
-        envFrom:
-        - configMapRef:
-            name: env-vars
         ports:
         - containerPort: 5052
           name: tcp-5052
@@ -39,26 +36,25 @@ spec:
         - name: jwt-token
           mountPath: /root/jwttoken/jwtsecret.hex
           subPath: jwtsecret.hex
-        - name: start-beacon-node-sh
-          mountPath: /root/start-beacon-node.sh
-          subPath: start-beacon-node.sh
         command:
-          - "/bin/sh"
-          - "/root/start-beacon-node.sh"
+        - lighthouse
+        - --network=sepolia
+        - beacon_node
+        - --http
+        - --http-address=0.0.0.0
+        - --execution-endpoint=http://geth-authrpc.lighthouse.svc.cluster.local:8551
+        - --execution-jwt=/root/jwttoken/jwtsecret.hex
+        - --checkpoint-sync-url=https://sepolia.beaconstate.info
       volumes:
       - name: jwt-token
         secret:
           secretName: jwt-token
-      - name: start-beacon-node-sh
-        configMap:
-          name: start-beacon-node-sh
-          defaultMode: 0755
   volumeClaimTemplates:
   - metadata:
       name: lighthouse-data
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "local-storage"
+      storageClassName: "local-ssd-storage"
       resources:
         requests:
           storage: 248Gi
