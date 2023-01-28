@@ -16,17 +16,15 @@ Kubernetes manifests for deploying
 Create the `lighthouse` namespace:
 
 ```bash
-kubectl apply -f ./namespace.yaml
+kubectl apply -f ./00-prepare/namespace.yaml
 ```
-
-## JWT token
 
 To enable communication between the execution client (`geth`) and the consensus
 client (`lighthouse`) using the new Engine API you need to generate a JWT Token
 to be used for communication. You can create it by executing:
 
 ```bash
-./generate-jwt.sh
+./00-prepare/generate-jwt.sh
 ```
 
 This will create a `./jwttoken` directory, and `./jwttoken/jwtsecret.hex` file
@@ -37,16 +35,21 @@ executing:
 kubectl --namespace lighthouse create secret generic jwt-token --from-file=./jwttoken/jwtsecret.hex
 ```
 
-## Environment variables
+# Install `geth`
 
-The first step is to configure environment variables in [`.env`](./.env) file.
-When it is done, crate a `ConfigMap` from it by executing:
+For configuring `geth` we're using configuration file
+[`geth-config.toml`](./01-geth/geth-config.toml). It means that `geth` will be
+started simply with `geth --config get-config.toml`, without any additional CLI
+arguments, and that you'll have to change the config appropriately to customize
+it for your needs. Creation of the configuration file is well explained in this
+[StackExchange answer](https://ethereum.stackexchange.com/questions/29063/geth-config-file-documentation#answer-29246).
+
+Once the config file is created / edited appropriately, create a `ConfigMap`
+from it by executing:
 
 ```bash
-kubectl --namespace lighthouse create configmap env-vars --from-env-file=./.env
+kubectl --namespace lighthouse
 ```
-
-# Install `geth`
 
 Create a `ConfigMap` with the entry point script by executing:
 
