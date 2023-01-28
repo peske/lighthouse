@@ -45,6 +45,7 @@ spec:
         - --execution-endpoint=http://geth-authrpc.lighthouse.svc.cluster.local:8551
         - --execution-jwt=/root/jwttoken/jwtsecret.hex
         - --checkpoint-sync-url=https://sepolia.beaconstate.info
+        - --slots-per-restore-point=64
       volumes:
       - name: jwt-token
         secret:
