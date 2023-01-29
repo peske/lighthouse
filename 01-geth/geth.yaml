@@ -33,24 +33,19 @@ spec:
         - name: jwt-token
           mountPath: /root/jwttoken/jwtsecret.hex
           subPath: jwtsecret.hex
+        - name: geth-config
+          mountPath: /root/geth-config.toml
+          subPath: geth-config.toml
         command:
         - geth
-        - --sepolia
-        - --datadir=/root/data/.ethereum
-        - --datadir.ancient=/root/data/ancient-data
-        - --http
-        - --http.addr=0.0.0.0
-        - --http.vhosts=*
-        - --http.api=eth,net
-        - --ipcdisable
-        - --authrpc.addr=0.0.0.0
-        - --authrpc.port=8551
-        - --authrpc.vhosts=*
-        - --authrpc.jwtsecret=/root/jwttoken/jwtsecret.hex
+        - --config /root/get-config.toml
       volumes:
       - name: jwt-token
         secret:
           secretName: jwt-token
+      - name: geth-config
+        configMap:
+          name: geth-config
   volumeClaimTemplates:
   - metadata:
       name: geth-data
