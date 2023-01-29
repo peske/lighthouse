@@ -97,14 +97,10 @@ kubectl apply -f ./01-geth/geth.yaml
 
 # Install Lighthouse beacon
 
-Create a `ConfigMap` with the entry point script by executing:
+> TODO(peske): Implement configuration options.
+
+Create the `StatefulSet` by executing:
 
 ```bash
-kubectl --namespace lighthouse create configmap start-beacon-node-sh --from-file=./scripts/start-beacon-node.sh
-```
-
-Create a `StatefulSet` by executing:
-
-```bash
-kubectl apply -f ./beacon.yaml
+kubectl apply -f ./02-beacon/beacon.yaml
 ```
