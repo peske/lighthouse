@@ -37,20 +37,34 @@ kubectl --namespace lighthouse create secret generic jwt-token --from-file=./jwt
 
 # Install `geth`
 
-For configuring `geth` we're using configuration file
-[`geth-config.toml`](./01-geth/geth-config.toml). It means that `geth` will be
-started by executing:
+For configuring `geth` we're using configuration file, meaning that `geth` will
+be started by simply by executing `geth --config get-config.toml`, without any
+additional CLI arguments. It means that we need to create the config file, and
+a `ConfigMap` from it.
 
-```bash
-geth --config get-config.toml
-```
-
- `geth --config get-config.toml`, without any additional CLI
-arguments, and that you'll have to change the config appropriately to customize
-it for your needs. Creation of the configuration file is well explained in this
+Creation of the configuration file is well explained in this
 [StackExchange answer](https://ethereum.stackexchange.com/questions/29063/geth-config-file-documentation#answer-29246).
+In short, you should execute `geth` command with all CLI arguments set as
+needed, with `dumpconfig` option. When `dumpconfig` option is set, instead of
+launching `geth` will dump the config file that reflects all the CLI options set
+and exits.
 
-The current version of the config file is created by executing:
+> **Note:** The only problem with this command is that it will try to create the
+  directories you've set in `--datadir` and `--datadir.ancient`, and it will
+  fail if you don't have permissions for these locations (i.e. if you set
+  `/root/data`). The workaround is simple: just replace these protected paths
+  with some dummy paths (i.e. replace `/root/data` with `/tmp/data`), execute
+  the command, and then replace the dummy directory path with the real one in
+  the resulting config file.
+
+> **Note:** You should avoid changing paths (i.e. `--datadir`,
+  `--datadir.ancient`, `--ethash.dagdir`) in the examples below because they are
+  set in accordance with the mounted PVC. If you need to change these paths, you
+  should also change [`geth.yaml`](./01-geth/geth.yaml) file appropriately. One
+  possible reason for changing these paths can be to store _ancient data_ on a
+  slower device (HDD), because it doesn't require performant I/O.
+
+Here is an example of creating the config file for `sepolia` network:
 
 ```bash
 geth dumpconfig \
@@ -66,21 +80,32 @@ geth dumpconfig \
     --authrpc.port=8551 \
     --authrpc.vhosts=* \
     --authrpc.jwtsecret=/root/jwttoken/jwtsecret.hex \
-    --ethash.dagdir=/root/data.ethash \
+    --ethash.dagdir=/root/data/.ethash \
     > ./01-geth/geth-config.toml
 ```
 
-> **Note:** The previous command will fail for a ridiculous reason: you don't
-  have permissions to create `/root/data` directory, and for some reason even
-  with `dumpconfig` the command tries to create this directory. The simplest
-  workarround would be to replace `/root/` with a dummy path `/tmp/`, execute
-  the command, and then find and replace `/tmp/` with `/root/` in the resulting
-  config file.
+Here's an example for the main network:
 
-> **Note:** You should not change the paths in the command above because the
-  appropriate volumes and secrets will be mounted at these path later. If for
-  any reason you have to change these paths, you should also change
-  [`geth.yaml`](./01-geth/geth.yaml) file appropriately.
+```bash
+geth dumpconfig \
+    --syncmode=snap \
+    --datadir=/root/data/.ethereum \
+    --datadir.ancient=/root/data/ancient-data \
+    --http \
+    --http.addr=0.0.0.0 \
+    --http.vhosts=* \
+    --http.api=admin,eth,debug,miner,net,txpool,personal,web3 \
+    --ipcdisable \
+    --authrpc.addr=0.0.0.0 \
+    --authrpc.port=8551 \
+    --authrpc.vhosts=* \
+    --authrpc.jwtsecret=/root/jwttoken/jwtsecret.hex \
+    --ethash.dagdir=/root/data/.ethash \
+    > ./01-geth/geth-config.toml
+```
+
+> TODO(peske): Here I've set many different modules (`--http.api` values),
+  simply by copying from somewhere. I should understand these modules well.
 
 Once the config file is created / edited appropriately, create a `ConfigMap`
 from it by executing:
@@ -103,4 +128,30 @@ Create the `StatefulSet` by executing:
 
 ```bash
 kubectl apply -f ./02-beacon/beacon.yaml
+```
+
+# Install `chaind`
+
+Resources:
+
+- https://github.com/wealdtech/chaind
+
+The first step is to prepare the config file
+[`chaind-config.yaml`](./03-chaind/chaind-config.yaml). There isn't much to do, 
+but at very list you should probably change PostgreSQL password.
+
+> **Note:** Don't push the password to git!
+
+> **TODO(peske):** Investigate all config options.
+
+Once the file is ready, you should create a `Secret` from it by executing:
+
+```bash
+kubectl --namespace lighthouse create secret generic chaind-config --from-file=./03-chaind/chaind-config.yaml
+```
+
+After that you can create `chaind` deployment by executing:
+
+```bash
+kubectl apply -f ./03-chaind/chaind.yaml
 ```

@@ -38,7 +38,7 @@ spec:
           subPath: geth-config.toml
         command:
         - geth
-        - --config /root/get-config.toml
+        - --config=/root/geth-config.toml
       volumes:
       - name: jwt-token
         secret:
