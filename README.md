@@ -130,12 +130,28 @@ kubectl apply -f ./01-geth/geth.yaml
 
 # Install Lighthouse beacon
 
-> TODO(peske): Implement configuration options.
+In the current version we still don't have a convenient way to configure the
+beacon node. All the configuration is passed via CLI arguments, and is provided
+directly in the `StatefulSet` manifest file. For this reason, currently there
+are two `StatefulSet` manifest files:
+[`beacon-statefulset-mainnet.yaml`](./02-beacon/beacon-statefulset-mainnet.yaml)
+and
+[`beacon-statefulset-sepolia.yaml`](./02-beacon/beacon-statefulset-sepolia.yaml).
+The difference is in the CLI arguments provided.
 
-Create the `StatefulSet` by executing:
+> TODO(peske): Implement a better configuration mechanism.
+
+When the desired CLI arguments are set, you can create the `StatefulSet` by
+executing something like:
 
 ```bash
-kubectl apply -f ./02-beacon/beacon.yaml
+kubectl apply -f ./02-beacon/beacon-statefulset-mainnet.yaml
+```
+
+After that create the services by executing:
+
+```bash
+kubectl apply -f ./02-beacon/beacon-services.yaml
 ```
 
 # Install `chaind`

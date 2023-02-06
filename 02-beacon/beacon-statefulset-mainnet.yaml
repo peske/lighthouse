@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: beacon
+  namespace: lighthouse
+spec:
+  selector:
+    matchLabels:
+      app: beacon
+  serviceName: beacon
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: beacon
+    spec:
+      containers:
+      - name: lighthouse
+        image: sigp/lighthouse:latest
+        ports:
+        - containerPort: 5052
+          name: tcp-5052
+          protocol: TCP
+        - containerPort: 5053
+          name: tcp-5053
+          protocol: TCP
+        - containerPort: 9000
+          name: tcp-9000
+          protocol: TCP
+        - containerPort: 9000
+          name: udp-9000
+          protocol: UDP
+        volumeMounts:
+        - name: lighthouse-data
+          mountPath: /root/.lighthouse
+        - name: jwt-token
+          mountPath: /root/jwttoken/jwtsecret.hex
+          subPath: jwtsecret.hex
+        command:
+        - lighthouse
+        - beacon_node
+        - --http
+        - --http-address=0.0.0.0
+        - --execution-endpoint=http://geth-authrpc.lighthouse.svc.cluster.local:8551
+        - --execution-jwt=/root/jwttoken/jwtsecret.hex
+        - --slots-per-restore-point=256
+      volumes:
+      - name: jwt-token
+        secret:
+          secretName: jwt-token
+  volumeClaimTemplates:
+  - metadata:
+      name: lighthouse-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "local-ssd-storage"
+      resources:
+        requests:
+          storage: 1107Gi

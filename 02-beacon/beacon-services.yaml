@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: beacon-p2p
+  namespace: lighthouse
+spec:
+  selector:
+    app: beacon
+  type: NodePort
+  ports:
+  - name: tcp-9000
+    port: 9000
+    nodePort: 30900
+    targetPort: 9000
+    protocol: TCP
+  - name: udp-9000
+    port: 9000
+    nodePort: 30900
+    targetPort: 9000
+    protocol: UDP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: beacon-api
+  namespace: lighthouse
+spec:
+  selector:
+    app: beacon
+  type: NodePort
+  ports:
+  - name: tcp-5052
+    port: 5052
+    targetPort: 5052
+    protocol: TCP
+    nodePort: 30052
+  - name: tcp-5053
+    port: 5053
+    targetPort: 5053
+    protocol: TCP
+    nodePort: 30053
