@@ -18,6 +18,9 @@ spec:
       - name: client-go
         image: ethereum/client-go:stable
         ports:
+        - containerPort: 8545
+          name: http
+          protocol: TCP
         - containerPort: 8551
           name: authrpc
           protocol: TCP
@@ -67,6 +70,10 @@ spec:
     app: geth
   type: NodePort
   ports:
+  - name: http
+    port: 8545
+    nodePort: 30545
+    targetPort: 8545
   - name: listener
     port: 30303
     nodePort: 30303

@@ -73,6 +73,8 @@ geth dumpconfig \
     --datadir.ancient=/root/data/ancient-data \
     --http \
     --http.addr=0.0.0.0 \
+    --http.port=8545 \
+    --http.corsdomain=* \
     --http.vhosts=* \
     --http.api=admin,eth,debug,miner,net,txpool,personal,web3 \
     --ipcdisable \
@@ -96,6 +98,8 @@ geth dumpconfig \
     --datadir.ancient=/root/data/ancient-data \
     --http \
     --http.addr=0.0.0.0 \
+    --http.port=8545 \
+    --http.corsdomain=* \
     --http.vhosts=* \
     --http.api=admin,eth,debug,miner,net,txpool,personal,web3 \
     --ipcdisable \

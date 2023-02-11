@@ -70,6 +70,7 @@ DataDir = "/root/data/.ethereum"
 IPCPath = ""
 HTTPHost = "0.0.0.0"
 HTTPPort = 8545
+HTTPCors = ["*"]
 HTTPVirtualHosts = ["*"]
 HTTPModules = ["admin", "eth", "debug", "miner", "net", "txpool", "personal", "web3"]
 AuthAddr = "0.0.0.0"
